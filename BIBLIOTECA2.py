@@ -524,7 +524,7 @@ class Biblioteca:
 
         self.next_id_libro += 1
 
-        print("Libro agregado correctamente.")
+        print(f"Libro agregado con ID {libro.get_id_libro()}.")
 
     def listar_catalogo(self):
 
@@ -572,7 +572,7 @@ class Biblioteca:
 
         self.next_id_usuario += 1
 
-        print("Usuario registrado.")
+        print(f"Usuario registrado con ID {usuario.get_id_usuario()}.")
 
     def listar_usuarios(self):
 
