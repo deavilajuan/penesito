@@ -1,1 +1,776 @@
-
+# ============================================================
+#  BIBLIOTECA DIGITAL
+#  Asignatura: Estructura de Datos
+#  Universidad Tecnológica de Bolívar
+#  Integrantes: Juan F. De Avila, José Vega, Santiago Cabarcas
+#  Docente: Rafael Monterroza
+# ============================================================
+#
+#  Sin dependencias externas. Todo en memoria.
+#  Los datos se pierden al cerrar el programa.
+#  El catálogo y usuarios iniciales se cargan automáticamente.
+# ============================================================
+ 
+from datetime import date, timedelta
+ 
+ 
+# ============================================================
+# 1. CLASES DE DOMINIO (POO)
+# ============================================================
+ 
+class Libro:
+    """Representa un libro en el catálogo."""
+ 
+    _siguiente_id = 1  # Contador global de IDs
+ 
+    def __init__(self, titulo, autor, categoria,
+                 anio_publicacion, isbn=None, estado_disponible=True, id_libro=None):
+        if id_libro is not None:
+            self.__id_libro = id_libro
+        else:
+            self.__id_libro = Libro._siguiente_id
+            Libro._siguiente_id += 1
+        self.__titulo            = titulo
+        self.__autor             = autor
+        self.__categoria         = categoria
+        self.__anio_publicacion  = anio_publicacion
+        self.__isbn              = isbn
+        self.__estado_disponible = estado_disponible
+ 
+    # Getters
+    def get_id_libro(self):          return self.__id_libro
+    def get_titulo(self):            return self.__titulo
+    def get_autor(self):             return self.__autor
+    def get_categoria(self):         return self.__categoria
+    def get_anio_publicacion(self):  return self.__anio_publicacion
+    def get_isbn(self):              return self.__isbn
+    def get_estado_disponible(self): return self.__estado_disponible
+ 
+    # Setters
+    def set_estado_disponible(self, v): self.__estado_disponible = v
+ 
+    def mostrar_info(self):
+        estado = "Disponible" if self.__estado_disponible else "Prestado"
+        print(f"  [{self.__id_libro}] {self.__titulo}")
+        print(f"       Autor    : {self.__autor}")
+        print(f"       Categoría: {self.__categoria}  |  Año: {self.__anio_publicacion}")
+        print(f"       ISBN     : {self.__isbn or 'N/A'}  |  Estado: {estado}")
+ 
+    def __str__(self):
+        return f"Libro({self.__id_libro}, '{self.__titulo}', '{self.__autor}')"
+ 
+ 
+# ------------------------------------------------------------
+ 
+class NodoPrestamo:
+    """Nodo de la lista enlazada de préstamos."""
+ 
+    def __init__(self, prestamo):
+        self.prestamo  = prestamo
+        self.siguiente = None
+ 
+ 
+class Prestamo:
+    """Registra la relación entre un usuario y un libro."""
+ 
+    _siguiente_id = 1
+ 
+    def __init__(self, libro, usuario, fecha_prestamo,
+                 fecha_devolucion_esperada,
+                 fecha_devolucion_real=None, estado='activo', id_prestamo=None):
+        if id_prestamo is not None:
+            self.__id_prestamo = id_prestamo
+        else:
+            self.__id_prestamo = Prestamo._siguiente_id
+            Prestamo._siguiente_id += 1
+        self.__libro                     = libro
+        self.__usuario                   = usuario
+        self.__fecha_prestamo            = fecha_prestamo
+        self.__fecha_devolucion_esperada = fecha_devolucion_esperada
+        self.__fecha_devolucion_real     = fecha_devolucion_real
+        self.__estado                    = estado  # activo | completado | vencido
+ 
+    # Getters
+    def get_id_prestamo(self):               return self.__id_prestamo
+    def get_libro(self):                     return self.__libro
+    def get_usuario(self):                   return self.__usuario
+    def get_fecha_prestamo(self):            return self.__fecha_prestamo
+    def get_fecha_devolucion_esperada(self): return self.__fecha_devolucion_esperada
+    def get_fecha_devolucion_real(self):     return self.__fecha_devolucion_real
+    def get_estado(self):                    return self.__estado
+ 
+    # Setters
+    def set_estado(self, v):                 self.__estado = v
+    def set_fecha_devolucion_real(self, v):  self.__fecha_devolucion_real = v
+ 
+    def mostrar_info(self):
+        print(f"  Préstamo #{self.__id_prestamo}")
+        print(f"    Libro   : {self.__libro.get_titulo()}")
+        print(f"    Usuario : {self.__usuario.get_nombre()} {self.__usuario.get_apellido()}")
+        print(f"    Desde   : {self.__fecha_prestamo}  →  Vence: {self.__fecha_devolucion_esperada}")
+        if self.__fecha_devolucion_real:
+            print(f"    Devuelto: {self.__fecha_devolucion_real}")
+        print(f"    Estado  : {self.__estado.upper()}")
+ 
+ 
+# ------------------------------------------------------------
+ 
+class ListaEnlazadaPrestamos:
+    """Lista enlazada simple para el historial de préstamos de un usuario."""
+ 
+    def __init__(self):
+        self.__cabeza = None
+        self.__tamaño = 0
+ 
+    def agregar(self, prestamo: Prestamo):
+        nuevo           = NodoPrestamo(prestamo)
+        nuevo.siguiente = self.__cabeza
+        self.__cabeza   = nuevo
+        self.__tamaño  += 1
+ 
+    def buscar_por_id(self, id_prestamo):
+        actual = self.__cabeza
+        while actual:
+            if actual.prestamo.get_id_prestamo() == id_prestamo:
+                return actual.prestamo
+            actual = actual.siguiente
+        return None
+ 
+    def listar_activos(self):
+        activos = []
+        actual  = self.__cabeza
+        while actual:
+            if actual.prestamo.get_estado() == 'activo':
+                activos.append(actual.prestamo)
+            actual = actual.siguiente
+        return activos
+ 
+    def listar_todos(self):
+        todos  = []
+        actual = self.__cabeza
+        while actual:
+            todos.append(actual.prestamo)
+            actual = actual.siguiente
+        return todos
+ 
+ 
+# ------------------------------------------------------------
+ 
+class Usuario:
+    """Modela un usuario del sistema."""
+ 
+    _siguiente_id = 1
+ 
+    def __init__(self, nombre, apellido, tipo_usuario,
+                 email, fecha_registro=None, activo=True, id_usuario=None):
+        if id_usuario is not None:
+            self.__id_usuario = id_usuario
+        else:
+            self.__id_usuario = Usuario._siguiente_id
+            Usuario._siguiente_id += 1
+        self.__nombre         = nombre
+        self.__apellido       = apellido
+        self.__tipo_usuario   = tipo_usuario   # estudiante | docente | administrativo
+        self.__email          = email
+        self.__fecha_registro = fecha_registro or date.today()
+        self.__activo         = activo
+        self.__historial      = ListaEnlazadaPrestamos()
+ 
+    # Getters
+    def get_id_usuario(self):    return self.__id_usuario
+    def get_nombre(self):        return self.__nombre
+    def get_apellido(self):      return self.__apellido
+    def get_tipo_usuario(self):  return self.__tipo_usuario
+    def get_email(self):         return self.__email
+    def get_fecha_registro(self):return self.__fecha_registro
+    def get_activo(self):        return self.__activo
+    def get_historial(self):     return self.__historial
+ 
+    def agregar_prestamo(self, prestamo: Prestamo):
+        self.__historial.agregar(prestamo)
+ 
+    def prestamos_activos(self):
+        return self.__historial.listar_activos()
+ 
+    def mostrar_info(self):
+        print(f"  [{self.__id_usuario}] {self.__nombre} {self.__apellido}")
+        print(f"       Tipo    : {self.__tipo_usuario}  |  Email: {self.__email}")
+        print(f"       Registro: {self.__fecha_registro}  |  Activo: {'Sí' if self.__activo else 'No'}")
+ 
+    def __str__(self):
+        return f"Usuario({self.__id_usuario}, '{self.__nombre} {self.__apellido}')"
+ 
+ 
+# ============================================================
+# 2. ÁRBOL BINARIO DE BÚSQUEDA (ABB) — catálogo de libros
+# ============================================================
+ 
+class NodoABB:
+    def __init__(self, libro: Libro):
+        self.libro = libro
+        self.izq   = None
+        self.der   = None
+ 
+ 
+class ArbolBinarioBusqueda:
+    """ABB ordenado por título (alfabético)."""
+ 
+    def __init__(self):
+        self.__raiz  = None
+        self.__total = 0
+ 
+    def get_total(self): return self.__total
+ 
+    def insertar(self, libro: Libro):
+        self.__raiz   = self.__insertar_rec(self.__raiz, libro)
+        self.__total += 1
+ 
+    def __insertar_rec(self, nodo, libro):
+        if nodo is None:
+            return NodoABB(libro)
+        clave = libro.get_titulo().lower()
+        cnodo = nodo.libro.get_titulo().lower()
+        if clave < cnodo:
+            nodo.izq = self.__insertar_rec(nodo.izq, libro)
+        elif clave > cnodo:
+            nodo.der = self.__insertar_rec(nodo.der, libro)
+        else:
+            nodo.libro = libro  # actualizar duplicado
+        return nodo
+ 
+    def buscar_titulo(self, titulo: str):
+        return self.__buscar_rec(self.__raiz, titulo.lower())
+ 
+    def __buscar_rec(self, nodo, tl):
+        if nodo is None:
+            return None
+        clave = nodo.libro.get_titulo().lower()
+        if tl == clave:  return nodo.libro
+        if tl <  clave:  return self.__buscar_rec(nodo.izq, tl)
+        return self.__buscar_rec(nodo.der, tl)
+ 
+    def buscar_titulo_parcial(self, fragmento: str) -> list:
+        res = []
+        self.__parcial_rec(self.__raiz, fragmento.lower(), res)
+        return res
+ 
+    def __parcial_rec(self, nodo, frag, res):
+        if nodo is None: return
+        self.__parcial_rec(nodo.izq, frag, res)
+        if frag in nodo.libro.get_titulo().lower():
+            res.append(nodo.libro)
+        self.__parcial_rec(nodo.der, frag, res)
+ 
+    def buscar_autor(self, autor: str) -> list:
+        res = []
+        self.__campo_rec(self.__raiz, autor.lower(),
+                         lambda l: l.get_autor().lower(), res)
+        return res
+ 
+    def buscar_categoria(self, categoria: str) -> list:
+        res = []
+        self.__campo_rec(self.__raiz, categoria.lower(),
+                         lambda l: l.get_categoria().lower(), res)
+        return res
+ 
+    def __campo_rec(self, nodo, valor, extractor, res):
+        if nodo is None: return
+        self.__campo_rec(nodo.izq, valor, extractor, res)
+        if valor in extractor(nodo.libro):
+            res.append(nodo.libro)
+        self.__campo_rec(nodo.der, valor, extractor, res)
+ 
+    def eliminar(self, titulo: str):
+        self.__raiz, ok = self.__eliminar_rec(self.__raiz, titulo.lower())
+        if ok: self.__total -= 1
+        return ok
+ 
+    def __eliminar_rec(self, nodo, tl):
+        if nodo is None: return nodo, False
+        clave = nodo.libro.get_titulo().lower()
+        if tl < clave:
+            nodo.izq, ok = self.__eliminar_rec(nodo.izq, tl)
+            return nodo, ok
+        if tl > clave:
+            nodo.der, ok = self.__eliminar_rec(nodo.der, tl)
+            return nodo, ok
+        if nodo.izq is None: return nodo.der, True
+        if nodo.der is None: return nodo.izq, True
+        sucesor    = self.__minimo(nodo.der)
+        nodo.libro = sucesor.libro
+        nodo.der, _ = self.__eliminar_rec(nodo.der, sucesor.libro.get_titulo().lower())
+        return nodo, True
+ 
+    def __minimo(self, nodo):
+        while nodo.izq: nodo = nodo.izq
+        return nodo
+ 
+    def in_orden(self) -> list:
+        libros = []
+        self.__in_orden_rec(self.__raiz, libros)
+        return libros
+ 
+    def __in_orden_rec(self, nodo, libros):
+        if nodo is None: return
+        self.__in_orden_rec(nodo.izq, libros)
+        libros.append(nodo.libro)
+        self.__in_orden_rec(nodo.der, libros)
+ 
+ 
+# ============================================================
+# 3. LISTA ENLAZADA DE USUARIOS
+# ============================================================
+ 
+class NodoUsuario:
+    def __init__(self, usuario: Usuario):
+        self.usuario   = usuario
+        self.siguiente = None
+ 
+ 
+class ListaEnlazadaUsuarios:
+ 
+    def __init__(self):
+        self.__cabeza = None
+        self.__tamaño = 0
+ 
+    def get_tamaño(self): return self.__tamaño
+ 
+    def agregar(self, usuario: Usuario):
+        nuevo           = NodoUsuario(usuario)
+        nuevo.siguiente = self.__cabeza
+        self.__cabeza   = nuevo
+        self.__tamaño  += 1
+ 
+    def buscar_por_id(self, id_usuario: int):
+        actual = self.__cabeza
+        while actual:
+            if actual.usuario.get_id_usuario() == id_usuario:
+                return actual.usuario
+            actual = actual.siguiente
+        return None
+ 
+    def buscar_por_email(self, email: str):
+        actual = self.__cabeza
+        while actual:
+            if actual.usuario.get_email().lower() == email.lower():
+                return actual.usuario
+            actual = actual.siguiente
+        return None
+ 
+    def listar_todos(self) -> list:
+        usuarios = []
+        actual   = self.__cabeza
+        while actual:
+            usuarios.append(actual.usuario)
+            actual = actual.siguiente
+        return usuarios
+ 
+    def eliminar(self, id_usuario: int) -> bool:
+        actual, anterior = self.__cabeza, None
+        while actual:
+            if actual.usuario.get_id_usuario() == id_usuario:
+                if anterior: anterior.siguiente = actual.siguiente
+                else:        self.__cabeza      = actual.siguiente
+                self.__tamaño -= 1
+                return True
+            anterior, actual = actual, actual.siguiente
+        return False
+ 
+ 
+# ============================================================
+# 4. DATOS DE EJEMPLO (catálogo y usuarios precargados)
+# ============================================================
+ 
+LIBROS_EJEMPLO = [
+    # (titulo, autor, categoria, anio, isbn)
+    ("Cien años de soledad",       "Gabriel García Márquez", "Novela",       1967, "978-0-06-088328-7"),
+    ("El amor en los tiempos del cólera", "Gabriel García Márquez", "Novela", 1985, "978-0-14-028588-4"),
+    ("Don Quijote de la Mancha",   "Miguel de Cervantes",    "Clásico",      1605, "978-84-376-0494-7"),
+    ("1984",                       "George Orwell",          "Ciencia ficción", 1949, "978-0-452-28423-4"),
+    ("Brave New World",            "Aldous Huxley",          "Ciencia ficción", 1932, "978-0-06-085052-4"),
+    ("El principito",              "Antoine de Saint-Exupéry","Infantil",    1943, "978-0-15-601219-5"),
+    ("Harry Potter y la piedra filosofal", "J.K. Rowling",   "Fantasía",    1997, "978-0-439-70818-8"),
+    ("El señor de los anillos",    "J.R.R. Tolkien",         "Fantasía",    1954, "978-0-618-64015-7"),
+    ("Sapiens",                    "Yuval Noah Harari",      "Historia",    2011, "978-0-06-231609-7"),
+    ("Homo Deus",                  "Yuval Noah Harari",      "Historia",    2015, "978-0-06-264922-8"),
+    ("El código Da Vinci",         "Dan Brown",              "Thriller",    2003, "978-0-385-50420-5"),
+    ("Crimen y castigo",           "Fiodor Dostoyevski",     "Clásico",     1866, "978-0-14-044913-6"),
+    ("La metamorfosis",            "Franz Kafka",            "Clásico",     1915, "978-0-14-181367-9"),
+    ("To Kill a Mockingbird",      "Harper Lee",             "Novela",      1960, "978-0-06-112008-4"),
+    ("Fundación",                  "Isaac Asimov",           "Ciencia ficción", 1951, "978-0-553-29335-7"),
+    ("El alquimista",              "Paulo Coelho",           "Autoayuda",   1988, "978-0-06-250217-4"),
+    ("Estructura de datos en C++", "Mark Allen Weiss",       "Informática", 2006, "978-0-13-284737-6"),
+    ("Algoritmos",                 "Thomas Cormen",          "Informática", 2009, "978-0-262-03293-3"),
+    ("Clean Code",                 "Robert C. Martin",       "Informática", 2008, "978-0-13-235088-4"),
+    ("The Pragmatic Programmer",   "David Thomas",           "Informática", 1999, "978-0-13-595705-9"),
+]
+ 
+USUARIOS_EJEMPLO = [
+    # (nombre, apellido, tipo, email)
+    ("Laura",    "Martínez",  "estudiante",      "laura.martinez@utb.edu.co"),
+    ("Carlos",   "Pérez",     "estudiante",      "carlos.perez@utb.edu.co"),
+    ("Sofía",    "González",  "docente",         "sofia.gonzalez@utb.edu.co"),
+    ("Andrés",   "Ramírez",   "docente",         "andres.ramirez@utb.edu.co"),
+    ("Valentina","Torres",    "estudiante",      "valentina.torres@utb.edu.co"),
+    ("Miguel",   "Herrera",   "administrativo",  "miguel.herrera@utb.edu.co"),
+]
+ 
+ 
+# ============================================================
+# 5. CLASE BIBLIOTECA — coordinador principal
+# ============================================================
+ 
+class Biblioteca:
+    """
+    Contenedor principal del sistema.
+    Coordina el ABB de libros, la lista de usuarios y los préstamos.
+    Todo en memoria: los datos de ejemplo se cargan al iniciar.
+    """
+ 
+    def __init__(self):
+        self.__abb_libros     = ArbolBinarioBusqueda()
+        self.__lista_usuarios = ListaEnlazadaUsuarios()
+        self.__prestamos      = []
+ 
+    # ---- CARGA INICIAL ----
+ 
+    def cargar_datos_ejemplo(self):
+        print("\n── Cargando catálogo y usuarios de ejemplo ──")
+        for datos in LIBROS_EJEMPLO:
+            libro = Libro(*datos)
+            self.__abb_libros.insertar(libro)
+        print(f"  → {self.__abb_libros.get_total()} libro(s) cargado(s) en el ABB.")
+ 
+        for datos in USUARIOS_EJEMPLO:
+            usuario = Usuario(*datos)
+            self.__lista_usuarios.agregar(usuario)
+        print(f"  → {self.__lista_usuarios.get_tamaño()} usuario(s) cargado(s).")
+        print("── Carga completada ──\n")
+ 
+    # ---- GESTIÓN DE LIBROS ----
+ 
+    def agregar_libro(self, titulo, autor, categoria,
+                      anio_publicacion, isbn=None):
+        libro = Libro(titulo, autor, categoria, anio_publicacion, isbn)
+        self.__abb_libros.insertar(libro)
+        print(f"✔ Libro '{titulo}' agregado con ID {libro.get_id_libro()}.")
+        return libro
+ 
+    def buscar_libro_titulo(self, titulo: str):
+        return self.__abb_libros.buscar_titulo_parcial(titulo)
+ 
+    def buscar_libro_autor(self, autor: str):
+        return self.__abb_libros.buscar_autor(autor)
+ 
+    def buscar_libro_categoria(self, categoria: str):
+        return self.__abb_libros.buscar_categoria(categoria)
+ 
+    def buscar_libro_id(self, id_libro: int):
+        for l in self.__abb_libros.in_orden():
+            if l.get_id_libro() == id_libro:
+                return l
+        return None
+ 
+    def listar_catalogo(self):
+        return self.__abb_libros.in_orden()
+ 
+    def eliminar_libro(self, titulo: str) -> bool:
+        libro = self.__abb_libros.buscar_titulo(titulo)
+        if not libro:
+            print(f"✘ Libro '{titulo}' no encontrado.")
+            return False
+        for p in self.__prestamos:
+            if (p.get_libro().get_id_libro() == libro.get_id_libro()
+                    and p.get_estado() == 'activo'):
+                print("✘ El libro tiene préstamos activos. No se puede eliminar.")
+                return False
+        self.__abb_libros.eliminar(titulo)
+        print(f"✔ Libro '{titulo}' eliminado.")
+        return True
+ 
+    # ---- GESTIÓN DE USUARIOS ----
+ 
+    def registrar_usuario(self, nombre, apellido, tipo_usuario, email):
+        if self.__lista_usuarios.buscar_por_email(email):
+            print(f"✘ Ya existe un usuario con el email '{email}'.")
+            return None
+        usuario = Usuario(nombre, apellido, tipo_usuario, email)
+        self.__lista_usuarios.agregar(usuario)
+        print(f"✔ Usuario '{nombre} {apellido}' registrado con ID {usuario.get_id_usuario()}.")
+        return usuario
+ 
+    def buscar_usuario_id(self, id_usuario: int):
+        return self.__lista_usuarios.buscar_por_id(id_usuario)
+ 
+    def listar_usuarios(self):
+        return self.__lista_usuarios.listar_todos()
+ 
+    # ---- GESTIÓN DE PRÉSTAMOS ----
+ 
+    def registrar_prestamo(self, id_libro: int, id_usuario: int,
+                           dias_prestamo: int = 14):
+        libro   = self.buscar_libro_id(id_libro)
+        usuario = self.__lista_usuarios.buscar_por_id(id_usuario)
+ 
+        if not libro:
+            print("✘ Libro no encontrado.")
+            return None
+        if not usuario:
+            print("✘ Usuario no encontrado.")
+            return None
+        if not libro.get_estado_disponible():
+            print(f"✘ El libro '{libro.get_titulo()}' no está disponible.")
+            return None
+ 
+        hoy     = date.today()
+        vence   = hoy + timedelta(days=dias_prestamo)
+        prestamo = Prestamo(libro, usuario, hoy, vence)
+ 
+        libro.set_estado_disponible(False)
+        usuario.agregar_prestamo(prestamo)
+        self.__prestamos.append(prestamo)
+        print(f"✔ Préstamo registrado (ID {prestamo.get_id_prestamo()}). Vence: {vence}")
+        return prestamo
+ 
+    def registrar_devolucion(self, id_prestamo: int) -> bool:
+        prestamo = None
+        for p in self.__prestamos:
+            if p.get_id_prestamo() == id_prestamo:
+                prestamo = p
+                break
+ 
+        if not prestamo:
+            print("✘ Préstamo no encontrado.")
+            return False
+        if prestamo.get_estado() != 'activo':
+            print("✘ El préstamo ya fue completado o está vencido.")
+            return False
+ 
+        hoy = date.today()
+        prestamo.set_estado('completado')
+        prestamo.set_fecha_devolucion_real(hoy)
+        prestamo.get_libro().set_estado_disponible(True)
+        print(f"✔ Devolución registrada. Libro '{prestamo.get_libro().get_titulo()}' disponible.")
+        return True
+ 
+    def historial_usuario(self, id_usuario: int):
+        usuario = self.__lista_usuarios.buscar_por_id(id_usuario)
+        if not usuario:
+            print("✘ Usuario no encontrado.")
+            return []
+        return usuario.get_historial().listar_todos()
+ 
+    def prestamos_activos(self):
+        return [p for p in self.__prestamos if p.get_estado() == 'activo']
+ 
+ 
+# ============================================================
+# 6. INTERFAZ DE CONSOLA
+# ============================================================
+ 
+def separador(titulo=""):
+    print("\n" + "═" * 55)
+    if titulo:
+        print(f"  {titulo}")
+        print("═" * 55)
+ 
+def mostrar_libros(libros):
+    if not libros:
+        print("  (Sin resultados)")
+        return
+    for l in libros:
+        l.mostrar_info()
+        print()
+ 
+def menu_libros(bib: Biblioteca):
+    while True:
+        separador("GESTIÓN DE LIBROS")
+        print("  1. Ver catálogo completo")
+        print("  2. Buscar por título")
+        print("  3. Buscar por autor")
+        print("  4. Buscar por categoría")
+        print("  5. Buscar por ID")
+        print("  6. Agregar libro manualmente")
+        print("  7. Eliminar libro")
+        print("  0. Volver")
+        op = input("\n  Opción: ").strip()
+ 
+        if op == '1':
+            separador("CATÁLOGO COMPLETO")
+            mostrar_libros(bib.listar_catalogo())
+ 
+        elif op == '2':
+            t = input("  Título (o fragmento): ").strip()
+            separador(f"Resultados para '{t}'")
+            mostrar_libros(bib.buscar_libro_titulo(t))
+ 
+        elif op == '3':
+            a = input("  Autor (o fragmento): ").strip()
+            separador(f"Resultados para '{a}'")
+            mostrar_libros(bib.buscar_libro_autor(a))
+ 
+        elif op == '4':
+            c = input("  Categoría: ").strip()
+            separador(f"Categoría '{c}'")
+            mostrar_libros(bib.buscar_libro_categoria(c))
+ 
+        elif op == '5':
+            try:
+                bid = int(input("  ID del libro: ").strip())
+                libro = bib.buscar_libro_id(bid)
+                if libro:
+                    print()
+                    libro.mostrar_info()
+                else:
+                    print("  (Libro no encontrado)")
+            except ValueError:
+                print("  ID inválido.")
+ 
+        elif op == '6':
+            separador("AGREGAR LIBRO")
+            titulo = input("  Título         : ").strip()
+            autor  = input("  Autor          : ").strip()
+            cat    = input("  Categoría      : ").strip()
+            try:
+                anio = int(input("  Año publicación: ").strip())
+            except ValueError:
+                print("  Año inválido.")
+                continue
+            isbn = input("  ISBN (Enter para omitir): ").strip() or None
+            bib.agregar_libro(titulo, autor, cat, anio, isbn)
+ 
+        elif op == '7':
+            titulo = input("  Título exacto del libro a eliminar: ").strip()
+            bib.eliminar_libro(titulo)
+ 
+        elif op == '0':
+            break
+        else:
+            print("  Opción inválida.")
+ 
+def menu_usuarios(bib: Biblioteca):
+    while True:
+        separador("GESTIÓN DE USUARIOS")
+        print("  1. Listar usuarios")
+        print("  2. Registrar usuario")
+        print("  3. Buscar usuario por ID")
+        print("  4. Ver historial de préstamos")
+        print("  0. Volver")
+        op = input("\n  Opción: ").strip()
+ 
+        if op == '1':
+            separador("USUARIOS REGISTRADOS")
+            usuarios = bib.listar_usuarios()
+            if not usuarios:
+                print("  (Sin usuarios)")
+            for u in usuarios:
+                u.mostrar_info()
+                print()
+ 
+        elif op == '2':
+            separador("REGISTRAR USUARIO")
+            nombre   = input("  Nombre   : ").strip()
+            apellido = input("  Apellido : ").strip()
+            print("  Tipos disponibles: estudiante / docente / administrativo")
+            tipo     = input("  Tipo     : ").strip()
+            email    = input("  Email    : ").strip()
+            bib.registrar_usuario(nombre, apellido, tipo, email)
+ 
+        elif op == '3':
+            try:
+                uid     = int(input("  ID del usuario: ").strip())
+                usuario = bib.buscar_usuario_id(uid)
+                if usuario:
+                    print()
+                    usuario.mostrar_info()
+                else:
+                    print("  (Usuario no encontrado)")
+            except ValueError:
+                print("  ID inválido.")
+ 
+        elif op == '4':
+            try:
+                uid      = int(input("  ID del usuario: ").strip())
+                historial = bib.historial_usuario(uid)
+                if historial:
+                    separador("HISTORIAL DE PRÉSTAMOS")
+                    for p in historial:
+                        p.mostrar_info()
+                        print()
+                else:
+                    print("  (Sin préstamos registrados)")
+            except ValueError:
+                print("  ID inválido.")
+ 
+        elif op == '0':
+            break
+        else:
+            print("  Opción inválida.")
+ 
+def menu_prestamos(bib: Biblioteca):
+    while True:
+        separador("GESTIÓN DE PRÉSTAMOS")
+        print("  1. Registrar préstamo")
+        print("  2. Registrar devolución")
+        print("  3. Ver préstamos activos")
+        print("  0. Volver")
+        op = input("\n  Opción: ").strip()
+ 
+        if op == '1':
+            try:
+                separador("REGISTRAR PRÉSTAMO")
+                id_libro   = int(input("  ID del libro   : ").strip())
+                id_usuario = int(input("  ID del usuario : ").strip())
+                dias       = input("  Días de préstamo (Enter = 14): ").strip()
+                dias       = int(dias) if dias else 14
+                bib.registrar_prestamo(id_libro, id_usuario, dias)
+            except ValueError:
+                print("  Valor inválido.")
+ 
+        elif op == '2':
+            try:
+                id_prestamo = int(input("  ID del préstamo: ").strip())
+                bib.registrar_devolucion(id_prestamo)
+            except ValueError:
+                print("  ID inválido.")
+ 
+        elif op == '3':
+            separador("PRÉSTAMOS ACTIVOS")
+            activos = bib.prestamos_activos()
+            if not activos:
+                print("  (No hay préstamos activos)")
+            for p in activos:
+                p.mostrar_info()
+                print()
+ 
+        elif op == '0':
+            break
+        else:
+            print("  Opción inválida.")
+ 
+def main():
+    separador("BIBLIOTECA DIGITAL — UTB")
+    print("  ⚠  Los datos son en memoria: se pierden al cerrar.\n")
+ 
+    bib = Biblioteca()
+    bib.cargar_datos_ejemplo()
+ 
+    while True:
+        separador("MENÚ PRINCIPAL")
+        print("  1. Libros")
+        print("  2. Usuarios")
+        print("  3. Préstamos")
+        print("  0. Salir")
+        op = input("\n  Opción: ").strip()
+ 
+        if   op == '1': menu_libros(bib)
+        elif op == '2': menu_usuarios(bib)
+        elif op == '3': menu_prestamos(bib)
+        elif op == '0':
+            print("\n¡Hasta luego!\n")
+            break
+        else:
+            print("  Opción inválida.")
+ 
+if __name__ == '__main__':
+    main()
