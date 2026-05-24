@@ -229,6 +229,64 @@ class ABB:
 
         return nodo
 
+    def eliminar(self, titulo):
+
+        self.raiz = self._eliminar(
+            self.raiz,
+            titulo.lower()
+        )
+
+    def _eliminar(self, nodo, titulo):
+
+        if nodo is None:
+            return None
+
+        if titulo < nodo.libro.get_titulo().lower():
+
+            nodo.izq = self._eliminar(
+                nodo.izq,
+                titulo
+            )
+
+        elif titulo > nodo.libro.get_titulo().lower():
+
+            nodo.der = self._eliminar(
+                nodo.der,
+                titulo
+            )
+
+        else:
+
+            # Sin hijos
+            if nodo.izq is None and nodo.der is None:
+                return None
+
+            # Un hijo
+            if nodo.izq is None:
+                return nodo.der
+
+            if nodo.der is None:
+                return nodo.izq
+
+            # Dos hijos
+            sucesor = self._minimo(nodo.der)
+
+            nodo.libro = sucesor.libro
+
+            nodo.der = self._eliminar(
+                nodo.der,
+                sucesor.libro.get_titulo().lower()
+            )
+
+        return nodo
+
+    def _minimo(self, nodo):
+
+        while nodo.izq:
+            nodo = nodo.izq
+
+        return nodo
+
     def inorden(self):
 
         libros = []
@@ -327,8 +385,22 @@ class Biblioteca:
 
                 print("No se puede eliminar. Tiene préstamos activos.")
                 return
+            
+        libro = None
+        
+        for l in self.listar_libros():
+            if l.get_titulo().lower() == titulo.lower():
+                libro = l
+                break
 
-        print("Función de eliminación protegida correctamente.")
+        if libro is None:
+            print ("Libro no encontrado")
+            return
+        
+        self.libros.eliminar(titulo)
+            
+
+        print("Libro eliminado correctamente")
 
     # --------------------------------------------------------
     # USUARIOS
@@ -440,6 +512,7 @@ def menu_libros(bib):
         print("1. Ver catálogo")
         print("2. Buscar libro")
         print("3. Agregar libro")
+        print("4. Eliminar libro")
         print("0. Volver")
 
         op = input("Opción: ").strip()
@@ -475,6 +548,11 @@ def menu_libros(bib):
             except ValueError as e:
 
                 print(f"Error: {e}")
+
+        elif op == "4":
+             
+             titulo = input("Título del libro a eliminar: ")
+             bib.eliminar_libro(titulo)
 
         elif op == "0":
             break
@@ -606,7 +684,6 @@ def main():
             menu_prestamos(bib)
 
         elif op == "0":
-
             print("Hasta luego.")
             break
 
