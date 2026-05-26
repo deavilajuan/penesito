@@ -1,9 +1,5 @@
-# ============================================================
-#  BIBLIOTECA DIGITAL — VERSIÓN FINAL CORREGIDA
-# ============================================================
 from datetime import date, timedelta
 import re
-
 
 # ============================================================
 # VALIDACIONES
@@ -13,28 +9,38 @@ TIPOS_VALIDOS = ["estudiante", "docente", "administrativo"]
 
 
 def validar_texto(texto, campo):
+
     if not texto.strip():
+
         raise ValueError(f"{campo} no puede estar vacío.")
+
     return texto.strip()
 
 
-def validar_año(año):
-    if año < 1000 or año > 2026:
+def validar_anio(anio):
+
+    if anio < 1000 or anio > 2026:
+
         raise ValueError("Año inválido.")
-    return año
+
+    return anio
 
 
 def validar_email(email):
+
     patron = r'^[\w\.-]+@[\w\.-]+\.\w+$'
 
     if not re.match(patron, email):
+
         raise ValueError("Correo electrónico inválido.")
 
     return email
 
 
 def validar_tipo_usuario(tipo):
+
     if tipo.lower() not in TIPOS_VALIDOS:
+
         raise ValueError(
             "Tipo inválido. Use: estudiante, docente o administrativo."
         )
@@ -43,101 +49,73 @@ def validar_tipo_usuario(tipo):
 
 
 # ============================================================
-# CLASE LIBRO
+# LIBRO
 # ============================================================
 
 class Libro:
 
-    _id = 1
+    contador = 1
 
-    def __init__(self, titulo, autor, categoria, año, isbn=None):
+    def __init__(self, titulo, autor, categoria, anio, isbn=None):
 
-        self.__id = Libro._id
-        Libro._id += 1
+        self.id = Libro.contador
+        Libro.contador += 1
 
-        self.__titulo = validar_texto(titulo, "Título")
-        self.__autor = validar_texto(autor, "Autor")
-        self.__categoria = validar_texto(categoria, "Categoría")
-        self.__año = validar_año(año)
-        self.__isbn = isbn if isbn else "N/A"
-        self.__disponible = True
+        self.titulo = validar_texto(titulo, "Título")
+        self.autor = validar_texto(autor, "Autor")
+        self.categoria = validar_texto(categoria, "Categoría")
+        self.anio = validar_anio(anio)
 
-    def get_id(self):
-        return self.__id
+        self.isbn = isbn if isbn else "N/A"
 
-    def get_titulo(self):
-        return self.__titulo
-
-    def get_autor(self):
-        return self.__autor
-
-    def get_categoria(self):
-        return self.__categoria
-
-    def get_año(self):
-        return self.__año
-
-    def get_disponible(self):
-        return self.__disponible
-
-    def set_disponible(self, estado):
-        self.__disponible = estado
+        self.disponible = True
 
     def mostrar_info(self):
 
-        estado = "Disponible" if self.__disponible else "Prestado"
+        estado = "Disponible" if self.disponible else "Prestado"
 
-        print(f"[{self.__id}] {self.__titulo}")
-        print(f"Autor      : {self.__autor}")
-        print(f"Categoría  : {self.__categoria}")
-        print(f"Año        : {self.__año}")
-        print(f"ISBN       : {self.__isbn}")
+        print(f"[{self.id}] {self.titulo}")
+        print(f"Autor      : {self.autor}")
+        print(f"Categoría  : {self.categoria}")
+        print(f"Año        : {self.anio}")
+        print(f"ISBN       : {self.isbn}")
         print(f"Estado     : {estado}")
 
 
 # ============================================================
-# PRESTAMOS
+# PRESTAMO
 # ============================================================
 
 class Prestamo:
 
-    _id = 1
+    contador = 1
 
     def __init__(self, libro, usuario, dias=14):
 
-        self.__id = Prestamo._id
-        Prestamo._id += 1
+        self.id = Prestamo.contador
+        Prestamo.contador += 1
 
-        self.__libro = libro
-        self.__usuario = usuario
-        self.__fecha_prestamo = date.today()
-        self.__fecha_devolucion = date.today() + timedelta(days=dias)
-        self.__estado = "activo"
+        self.libro = libro
+        self.usuario = usuario
 
-    def get_id(self):
-        return self.__id
+        self.fecha_prestamo = date.today()
+        self.fecha_devolucion = date.today() + timedelta(days=dias)
 
-    def get_libro(self):
-        return self.__libro
-
-    def get_usuario(self):
-        return self.__usuario
-
-    def get_estado(self):
-        return self.__estado
+        self.estado = "activo"
 
     def devolver(self):
 
-        self.__estado = "completado"
-        self.__libro.set_disponible(True)
+        self.estado = "completado"
+
+        self.libro.disponible = True
 
     def mostrar_info(self):
 
-        print(f"Préstamo #{self.__id}")
-        print(f"Libro      : {self.__libro.get_titulo()}")
-        print(f"Usuario    : {self.__usuario.get_nombre()}")
-        print(f"Estado     : {self.__estado}")
-        print(f"Vence      : {self.__fecha_devolucion}")
+        print(f"Préstamo #{self.id}")
+        print(f"Libro      : {self.libro.titulo}")
+        print(f"Usuario    : {self.usuario.nombre}")
+        print(f"Estado     : {self.estado}")
+        print(f"Vence      : {self.fecha_devolucion}")
 
 
 # ============================================================
@@ -146,55 +124,29 @@ class Prestamo:
 
 class Usuario:
 
-    _id = 1
+    contador = 1
 
     def __init__(self, nombre, apellido, tipo, email):
 
-        self.__id = Usuario._id
-        Usuario._id += 1
+        self.id = Usuario.contador
+        Usuario.contador += 1
 
-        self.__nombre = validar_texto(nombre, "Nombre")
-        self.__apellido = validar_texto(apellido, "Apellido")
-        self.__tipo = validar_tipo_usuario(tipo)
-        self.__email = validar_email(email)
+        self.nombre = validar_texto(nombre, "Nombre")
+        self.apellido = validar_texto(apellido, "Apellido")
+        self.tipo = validar_tipo_usuario(tipo)
+        self.email = validar_email(email)
 
-        self.__prestamos = []
-
-    def get_id(self):
-        return self.__id
-
-    def get_nombre(self):
-        return self.__nombre
-
-    def get_email(self):
-        return self.__email
-
-    def get_prestamos(self):
-        return self.__prestamos
-
-    def agregar_prestamo(self, prestamo):
-        self.__prestamos.append(prestamo)
-
-    def prestamos_activos(self):
-
-        activos = []
-
-        for p in self.__prestamos:
-
-            if p.get_estado() == "activo":
-                activos.append(p)
-
-        return activos
+        self.prestamos = []
 
     def mostrar_info(self):
 
-        print(f"[{self.__id}] {self.__nombre} {self.__apellido}")
-        print(f"Tipo   : {self.__tipo}")
-        print(f"Email  : {self.__email}")
+        print(f"[{self.id}] {self.nombre} {self.apellido}")
+        print(f"Tipo   : {self.tipo}")
+        print(f"Email  : {self.email}")
 
 
 # ============================================================
-# ABB
+# NODO ABB
 # ============================================================
 
 class NodoABB:
@@ -205,6 +157,10 @@ class NodoABB:
         self.izq = None
         self.der = None
 
+
+# ============================================================
+# ABB
+# ============================================================
 
 class ABB:
 
@@ -219,75 +175,20 @@ class ABB:
     def _insertar(self, nodo, libro):
 
         if nodo is None:
+
             return NodoABB(libro)
 
-        if libro.get_titulo().lower() < nodo.libro.get_titulo().lower():
+        if libro.titulo.lower() < nodo.libro.titulo.lower():
+
             nodo.izq = self._insertar(nodo.izq, libro)
 
         else:
+
             nodo.der = self._insertar(nodo.der, libro)
 
         return nodo
 
-    def eliminar(self, titulo):
-
-        self.raiz = self._eliminar(
-            self.raiz,
-            titulo.lower()
-        )
-
-    def _eliminar(self, nodo, titulo):
-
-        if nodo is None:
-            return None
-
-        if titulo < nodo.libro.get_titulo().lower():
-
-            nodo.izq = self._eliminar(
-                nodo.izq,
-                titulo
-            )
-
-        elif titulo > nodo.libro.get_titulo().lower():
-
-            nodo.der = self._eliminar(
-                nodo.der,
-                titulo
-            )
-
-        else:
-
-            # Sin hijos
-            if nodo.izq is None and nodo.der is None:
-                return None
-
-            # Un hijo
-            if nodo.izq is None:
-                return nodo.der
-
-            if nodo.der is None:
-                return nodo.izq
-
-            # Dos hijos
-            sucesor = self._minimo(nodo.der)
-
-            nodo.libro = sucesor.libro
-
-            nodo.der = self._eliminar(
-                nodo.der,
-                sucesor.libro.get_titulo().lower()
-            )
-
-        return nodo
-
-    def _minimo(self, nodo):
-
-        while nodo.izq:
-            nodo = nodo.izq
-
-        return nodo
-
-    def inorden(self):
+    def mostrar(self):
 
         libros = []
 
@@ -305,7 +206,7 @@ class ABB:
 
             self._inorden(nodo.der, libros)
 
-    def buscar_titulo(self, texto):
+    def buscar(self, texto):
 
         resultados = []
 
@@ -319,7 +220,8 @@ class ABB:
 
             self._buscar(nodo.izq, texto, resultados)
 
-            if texto in nodo.libro.get_titulo().lower():
+            if texto in nodo.libro.titulo.lower():
+
                 resultados.append(nodo.libro)
 
             self._buscar(nodo.der, texto, resultados)
@@ -355,52 +257,25 @@ class Biblioteca:
 
         self.libros.insertar(libro)
 
-        print("Libro agregado correctamente.")
+        print(f"Libro agregado correctamente. ID libro: {libro.id}")
 
-    def listar_libros(self):
+    def mostrar_catalogo(self):
 
-        return self.libros.inorden()
+        return self.libros.mostrar()
 
     def buscar_libro(self, texto):
 
-        return self.libros.buscar_titulo(texto)
+        return self.libros.buscar(texto)
 
-    def buscar_libro_por_id(self, id_libro):
+    def buscar_libro_id(self, id_libro):
 
-        for libro in self.listar_libros():
+        for libro in self.mostrar_catalogo():
 
-            if libro.get_id() == id_libro:
+            if libro.id == id_libro:
+
                 return libro
 
         return None
-
-    def eliminar_libro(self, titulo):
-
-        for p in self.prestamos:
-
-            if (
-                p.get_libro().get_titulo().lower() == titulo.lower()
-                and p.get_estado() == "activo"
-            ):
-
-                print("No se puede eliminar. Tiene préstamos activos.")
-                return
-            
-        libro = None
-        
-        for l in self.listar_libros():
-            if l.get_titulo().lower() == titulo.lower():
-                libro = l
-                break
-
-        if libro is None:
-            print ("Libro no encontrado")
-            return
-        
-        self.libros.eliminar(titulo)
-            
-
-        print("Libro eliminado correctamente")
 
     # --------------------------------------------------------
     # USUARIOS
@@ -410,7 +285,8 @@ class Biblioteca:
 
         for u in self.usuarios:
 
-            if u.get_email().lower() == email.lower():
+            if u.email.lower() == email.lower():
+
                 print("Ese correo ya existe.")
                 return
 
@@ -423,13 +299,14 @@ class Biblioteca:
 
         self.usuarios.append(usuario)
 
-        print("Usuario registrado correctamente.")
+        print(f"Usuario registrado correctamente. ID usuario: {usuario.id}")
 
     def buscar_usuario(self, id_usuario):
 
         for u in self.usuarios:
 
-            if u.get_id() == id_usuario:
+            if u.id == id_usuario:
+
                 return u
 
         return None
@@ -440,42 +317,55 @@ class Biblioteca:
 
     def registrar_prestamo(self, id_libro, id_usuario, dias=14):
 
-        libro = self.buscar_libro_por_id(id_libro)
+        libro = self.buscar_libro_id(id_libro)
         usuario = self.buscar_usuario(id_usuario)
 
         if libro is None:
+
             print("Libro no encontrado.")
             return
 
         if usuario is None:
+
             print("Usuario no encontrado.")
             return
 
-        if not libro.get_disponible():
+        if not libro.disponible:
+
             print("Libro no disponible.")
             return
 
-        if len(usuario.prestamos_activos()) >= Biblioteca.LIMITE_PRESTAMOS:
+        prestamos_activos = 0
+
+        for p in usuario.prestamos:
+
+            if p.estado == "activo":
+
+                prestamos_activos += 1
+
+        if prestamos_activos >= Biblioteca.LIMITE_PRESTAMOS:
+
             print("El usuario alcanzó el límite de préstamos.")
             return
 
         prestamo = Prestamo(libro, usuario, dias)
 
-        libro.set_disponible(False)
+        libro.disponible = False
 
-        usuario.agregar_prestamo(prestamo)
+        usuario.prestamos.append(prestamo)
 
         self.prestamos.append(prestamo)
 
-        print("Préstamo registrado correctamente.")
+        print(f"Préstamo registrado correctamente. ID préstamo: {prestamo.id}")
 
     def devolver_libro(self, id_prestamo):
 
         for p in self.prestamos:
 
-            if p.get_id() == id_prestamo:
+            if p.id == id_prestamo:
 
-                if p.get_estado() != "activo":
+                if p.estado != "activo":
+
                     print("El préstamo ya fue completado.")
                     return
 
@@ -488,13 +378,14 @@ class Biblioteca:
 
 
 # ============================================================
-# INTERFAZ
+# FUNCIONES
 # ============================================================
 
 def mostrar_libros(libros):
 
     if not libros:
-        print("Sin resultados.")
+
+        print("No hay libros registrados.")
         return
 
     for libro in libros:
@@ -504,28 +395,39 @@ def mostrar_libros(libros):
         print()
 
 
+# ============================================================
+# MENU LIBROS
+# ============================================================
+
 def menu_libros(bib):
 
     while True:
 
-        print("\\n===== LIBROS =====")
+        print("\n===== LIBROS =====")
         print("1. Ver catálogo")
         print("2. Buscar libro")
         print("3. Agregar libro")
-        print("4. Eliminar libro")
         print("0. Volver")
 
         op = input("Opción: ").strip()
 
         if op == "1":
 
-            mostrar_libros(bib.listar_libros())
+            mostrar_libros(bib.mostrar_catalogo())
 
         elif op == "2":
 
             texto = input("Título: ").strip()
 
-            mostrar_libros(bib.buscar_libro(texto))
+            resultados = bib.buscar_libro(texto)
+
+            if not resultados:
+
+                print("No se encontraron libros.")
+
+            else:
+
+                mostrar_libros(resultados)
 
         elif op == "3":
 
@@ -534,7 +436,9 @@ def menu_libros(bib):
                 titulo = input("Título: ")
                 autor = input("Autor: ")
                 categoria = input("Categoría: ")
+
                 anio = int(input("Año: "))
+
                 isbn = input("ISBN: ")
 
                 bib.agregar_libro(
@@ -549,23 +453,24 @@ def menu_libros(bib):
 
                 print(f"Error: {e}")
 
-        elif op == "4":
-             
-             titulo = input("Título del libro a eliminar: ")
-             bib.eliminar_libro(titulo)
-
         elif op == "0":
+
             break
 
         else:
+
             print("Opción inválida.")
 
+
+# ============================================================
+# MENU USUARIOS
+# ============================================================
 
 def menu_usuarios(bib):
 
     while True:
 
-        print("\\n===== USUARIOS =====")
+        print("\n===== USUARIOS =====")
         print("1. Registrar usuario")
         print("2. Listar usuarios")
         print("0. Volver")
@@ -594,26 +499,39 @@ def menu_usuarios(bib):
 
         elif op == "2":
 
-            for u in bib.usuarios:
+            if not bib.usuarios:
 
-                u.mostrar_info()
+                print("No hay usuarios registrados.")
 
-                print()
+            else:
+
+                for u in bib.usuarios:
+
+                    u.mostrar_info()
+
+                    print()
 
         elif op == "0":
+
             break
 
         else:
+
             print("Opción inválida.")
 
+
+# ============================================================
+# MENU PRESTAMOS
+# ============================================================
 
 def menu_prestamos(bib):
 
     while True:
 
-        print("\\n===== PRÉSTAMOS =====")
+        print("\n===== PRÉSTAMOS =====")
         print("1. Registrar préstamo")
         print("2. Registrar devolución")
+        print("3. Ver préstamos")
         print("0. Volver")
 
         op = input("Opción: ").strip()
@@ -636,6 +554,20 @@ def menu_prestamos(bib):
 
         elif op == "2":
 
+            prestamos_activos = False
+
+            for p in bib.prestamos:
+
+                if p.estado == "activo":
+
+                    prestamos_activos = True
+                    break
+
+            if not prestamos_activos:
+
+                print("No hay préstamos activos.")
+                continue
+
             try:
 
                 id_prestamo = int(input("ID préstamo: "))
@@ -646,10 +578,26 @@ def menu_prestamos(bib):
 
                 print("Ingrese solo números válidos.")
 
+        elif op == "3":
+
+            if not bib.prestamos:
+
+                print("No hay préstamos registrados.")
+
+            else:
+
+                for p in bib.prestamos:
+
+                    p.mostrar_info()
+
+                    print()
+
         elif op == "0":
+
             break
 
         else:
+
             print("Opción inválida.")
 
 
@@ -663,7 +611,7 @@ def main():
 
     while True:
 
-        print("\\n===== BIBLIOTECA DIGITAL =====")
+        print("\n===== BIBLIOTECA DIGITAL =====")
         print("1. Libros")
         print("2. Usuarios")
         print("3. Préstamos")
@@ -684,6 +632,7 @@ def main():
             menu_prestamos(bib)
 
         elif op == "0":
+
             print("Hasta luego.")
             break
 
@@ -693,4 +642,5 @@ def main():
 
 
 if __name__ == "__main__":
+
     main()
