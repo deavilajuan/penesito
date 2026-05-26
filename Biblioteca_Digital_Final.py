@@ -414,6 +414,7 @@ def menu_libros(bib):
         if op == "1":
 
             mostrar_libros(bib.mostrar_catalogo())
+            
             input("\nPresiona Enter para continuar...")
 
         elif op == "2":
