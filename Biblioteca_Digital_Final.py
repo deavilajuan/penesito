@@ -414,6 +414,7 @@ def menu_libros(bib):
         if op == "1":
 
             mostrar_libros(bib.mostrar_catalogo())
+            input("\nPresiona Enter para continuar...")
 
         elif op == "2":
 
@@ -428,6 +429,8 @@ def menu_libros(bib):
             else:
 
                 mostrar_libros(resultados)
+            
+            input("\nPresiona Enter para continuar...")
 
         elif op == "3":
 
@@ -452,6 +455,8 @@ def menu_libros(bib):
             except ValueError as e:
 
                 print(f"Error: {e}")
+
+            input("\nPresiona Enter para continuar...")
 
         elif op == "0":
 
@@ -497,6 +502,8 @@ def menu_usuarios(bib):
 
                 print(f"Error: {e}")
 
+            input("\nPresiona Enter para continuar...")
+
         elif op == "2":
 
             if not bib.usuarios:
@@ -510,6 +517,8 @@ def menu_usuarios(bib):
                     u.mostrar_info()
 
                     print()
+
+            input("\nPresiona Enter para continuar...")
 
         elif op == "0":
 
@@ -552,6 +561,8 @@ def menu_prestamos(bib):
 
                 print("Ingrese solo números válidos.")
 
+            input("\nPresiona Enter para continuar...")
+
         elif op == "2":
 
             prestamos_activos = False
@@ -578,6 +589,8 @@ def menu_prestamos(bib):
 
                 print("Ingrese solo números válidos.")
 
+            input("\nPresiona Enter para continuar...")
+
         elif op == "3":
 
             if not bib.prestamos:
@@ -591,6 +604,8 @@ def menu_prestamos(bib):
                     p.mostrar_info()
 
                     print()
+
+            input("\nPresiona Enter para continuar...")
 
         elif op == "0":
 
@@ -609,6 +624,12 @@ def main():
 
     bib = Biblioteca()
 
+    bib.agregar_libro("Cien años de soledad", "Gabriel García Márquez", "Novela", 1967, "978-0307474728")
+    bib.agregar_libro("El principito", "Antoine de Saint-Exupéry", "Ficción", 1943, "978-0156012195")
+    bib.agregar_libro("Don Quijote de la Mancha", "Miguel de Cervantes", "Clásico", 1605, "978-8420412146")
+    bib.agregar_libro("1984", "George Orwell", "Distopía", 1949, "978-0451524935")
+    bib.agregar_libro("Sapiens", "Yuval Noah Harari", "Historia", 2011, "978-0062316097")
+
     while True:
 
         print("\n===== BIBLIOTECA DIGITAL =====")
@@ -622,24 +643,15 @@ def main():
         if op == "1":
 
             menu_libros(bib)
-
         elif op == "2":
-
             menu_usuarios(bib)
-
         elif op == "3":
-
             menu_prestamos(bib)
-
         elif op == "0":
-
             print("Hasta luego.")
             break
-
         else:
-
             print("Opción inválida.")
-
 
 if __name__ == "__main__":
 
